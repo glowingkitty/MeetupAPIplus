@@ -1,6 +1,8 @@
-import requests
-from MeetupAPI.log import Log
 import time
+
+import requests
+
+from MeetupAPI.log import Log
 
 
 class MeetupDelete():
@@ -14,7 +16,7 @@ class MeetupDelete():
         self.log('delete()')
 
         if not self.access_token:
-            self.log('--> No MEETUP.ACCESS_TOKEN')
+            self.log('--> No ACCESS_TOKEN')
             self.log('--> return None')
             self.value = None
 

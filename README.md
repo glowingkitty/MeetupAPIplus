@@ -88,3 +88,26 @@ Optional inputs for .create():
 announce = boolean (announces the event to group members on meetup)
 publish_status = 'draft' or 'published' (default is 'draft')
 ```
+
+
+#### Meetup().delete()
+
+Based on [https://www.meetup.com/meetup_api/docs/:urlname/events/#delete](https://www.meetup.com/meetup_api/docs/:urlname/events/#delete)
+
+If successfull, Meetup().delete() will return the event it was given, but with event.url_meetup_event = None.
+If the request fails, Meetup().delete returns None.
+
+Required inputs for Meetup():
+```
+groupname = str
+email = str, (from your meetup account, for authentication)
+password = str (from your meetup account, for authentication)
+client_id = str
+client_secret = str
+redirect_uri = str
+```
+
+Required inputs for .delete():
+```
+event = Event class (with field 'url_meetup_event' and Event.save() function)
+```
