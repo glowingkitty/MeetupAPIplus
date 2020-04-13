@@ -1,5 +1,5 @@
 import requests
-from meetup_api.log import Log
+from MeetupAPI.log import Log
 import time
 
 

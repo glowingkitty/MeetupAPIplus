@@ -20,7 +20,7 @@ class MeetupFields():
         return event['description']
 
     def str_location(self, event):
-        from meetup_api.meetup_functions.str_location import MeetupSTRlocation
+        from MeetupAPI.meetup_functions.str_location import MeetupSTRlocation
         return MeetupSTRlocation(event, self.default_space_name, self.default_space_address).value
 
     def str_series_id(self, event):
@@ -33,7 +33,7 @@ class MeetupFields():
         return round(event['series']['end_date'] / 1000) if 'series' in event and 'end_date' in event['series'] else None
 
     def text_series_timing(self, event):
-        from meetup_api.meetup_functions.text_series_timing import MeetupTextSeriesTiming
+        from MeetupAPI.meetup_functions.text_series_timing import MeetupTextSeriesTiming
         return MeetupTextSeriesTiming(event).value
 
     def url_meetup_event(self, event):
@@ -46,13 +46,13 @@ class MeetupFields():
         return round(event['updated']/1000) if 'updated' in event else None
 
     def int_timezoneToOffset(self, timezone_name):
-        from meetup_api.meetup_functions.int_timezoneToOffset import MeetupIntTimezoneToOffset
+        from MeetupAPI.meetup_functions.int_timezoneToOffset import MeetupIntTimezoneToOffset
         return MeetupIntTimezoneToOffset(timezone_name).value
 
     def list_offsetToTimezone(self, offset_ms):
-        from meetup_api.meetup_functions.list_offsetToTimezone import MeetupListOffsetToTimezone
+        from MeetupAPI.meetup_functions.list_offsetToTimezone import MeetupListOffsetToTimezone
         return MeetupListOffsetToTimezone(offset_ms).value
 
     def str_timezone(self, event):
-        from meetup_api.meetup_functions.str_timezone import MeetupSTRtimezone
+        from MeetupAPI.meetup_functions.str_timezone import MeetupSTRtimezone
         return MeetupSTRtimezone(event, self.default_space_timezonestring).value

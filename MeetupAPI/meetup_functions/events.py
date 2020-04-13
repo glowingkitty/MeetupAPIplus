@@ -1,6 +1,6 @@
 import time
 
-from meetup_api.log import Log
+from MeetupAPI.log import Log
 
 
 class MeetupEvents():

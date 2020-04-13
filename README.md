@@ -14,6 +14,10 @@ pip install MeetupAPI
 
 ## Usage
 
+```
+from MeetupAPI import Meetup
+```
+
 ### API credentials optional
 
 #### Meetup().events()

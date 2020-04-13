@@ -1,16 +1,19 @@
-from meetup_api.log import Log
-from _apis.models import Scraper
-from selenium.webdriver.common.by import By
-import requests
-import time
 import json
-from secrets import Secret
+import time
+
+import requests
+from PyWebScraper import Scraper
+from selenium.webdriver.common.by import By
+
+from MeetupAPI.log import Log
 
 
 class MeetupAcessToken():
-    def __init__(self, email, password, client_id, client_secret, redirect_uri):
+    def __init__(self, access_token, access_token_valid_upto, email, password, client_id, client_secret, redirect_uri):
         self.logs = ['self.__init__']
         self.started = round(time.time())
+        self.access_token = access_token
+        self.access_token_valid_upto = access_token_valid_upto
         self.email = email
         self.password = password
         self.client_id = client_id
@@ -18,8 +21,8 @@ class MeetupAcessToken():
         self.redirect_uri = redirect_uri
 
         # check if still usable token is saved in secrets.json - else get new one
-        if Secret('MEETUP.ACCESS_TOKEN').value and Secret('MEETUP.ACCESS_TOKEN_VALID_UPTO').value > time.time()+60:
-            self.value = Secret('MEETUP.ACCESS_TOKEN').value
+        if self.access_token and self.access_token_valid_upto > time.time()+60:
+            self.value = self.access_token
 
         # check if required fields exist
         if not self.client_id or not self.client_secret or not self.redirect_uri or not self.email or not self.password:

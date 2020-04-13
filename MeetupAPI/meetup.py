@@ -3,8 +3,8 @@ import time
 
 import requests
 
-from meetup_api.log import Log
-from meetup_api.meetup_functions.meetup_fields import MeetupFields
+from MeetupAPI.log import Log
+from MeetupAPI.meetup_functions.meetup_fields import MeetupFields
 
 
 class Meetup(MeetupFields):
@@ -63,7 +63,7 @@ class Meetup(MeetupFields):
 
     @property
     def access_token(self):
-        from meetup_api.meetup_functions.access_token import MeetupAcessToken
+        from MeetupAPI.meetup_functions.access_token import MeetupAcessToken
         return MeetupAcessToken(self.email, self.password, self.client_id, self.client_secret, self.redirect_uri).value
 
     def log(self, text):
@@ -79,14 +79,14 @@ class Meetup(MeetupFields):
                fields=['group_key_photo', 'series',
                        'simple_html_description', 'rsvp_sample']
                ):
-        from meetup_api.meetup_functions.events import MeetupEvents
+        from MeetupAPI.meetup_functions.events import MeetupEvents
         return MeetupEvents(self, results_per_page,
                             pages, maximum_num_events, fields).value
 
     def create(self, event, announce=False, publish_status='draft'):
-        from meetup_api.meetup_functions.create import MeetupCreate
+        from MeetupAPI.meetup_functions.create import MeetupCreate
         return MeetupCreate(self.access_token, self.group, event, announce, publish_status, self.default_space_how_to_find_us).value
 
     def delete(self, event):
-        from meetup_api.meetup_functions.delete import MeetupDelete
+        from MeetupAPI.meetup_functions.delete import MeetupDelete
         return MeetupDelete(self.access_token, self.group, event).value
