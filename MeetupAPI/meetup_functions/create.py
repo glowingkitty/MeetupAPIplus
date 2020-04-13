@@ -2,7 +2,7 @@ import time
 
 import requests
 
-from log import Log
+from meetup_api.log import Log
 
 
 class MeetupCreate():

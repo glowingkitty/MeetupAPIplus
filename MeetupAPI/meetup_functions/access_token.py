@@ -1,4 +1,4 @@
-from log import Log
+from meetup_api.log import Log
 from _apis.models import Scraper
 from selenium.webdriver.common.by import By
 import requests

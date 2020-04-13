@@ -6,6 +6,12 @@ Want to support the development financially? Donations are always welcomed!
 
 [<img src="http://img.shields.io/liberapay/receives/marcoEDU.svg?logo=liberapay">](https://liberapay.com/marcoEDU)
 
+## Installation
+
+```
+pip install MeetupAPI
+```
+
 ## Usage
 
 ### API credentials optional
