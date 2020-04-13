@@ -1,11 +1,12 @@
-from config import Config
-import requests
 import time
+
+import requests
+
 from log import Log
 
 
 class MeetupCreate():
-    def __init__(self, access_token, group, event, announce, publish_status):
+    def __init__(self, access_token, group, event, announce, publish_status, how_to_find_us):
         self.logs = ['self.__init__']
         self.started = round(time.time())
         self.access_token = access_token
@@ -34,7 +35,7 @@ class MeetupCreate():
                 'refund_policy': None
             },
             'guest_limit': 2,  # from 0 to 2
-            'how_to_find_us': Config('PHYSICAL_SPACE.ADDRESS.HOW_TO_FIND_US__english').value,
+            'how_to_find_us': how_to_find_us,
             'lat': event.float_lat,
             'lon': event.float_lon,
             'name': event.str_name_en_US,

@@ -1,18 +1,27 @@
-from log import Log
-import time
-from secrets import Secret
-import requests
 import json
+import time
+
+import requests
+
+from log import Log
+from meetup_functions.meetup_fields import MeetupFields
 
 
-class Meetup():
+class Meetup(MeetupFields):
     def __init__(self,
-                 group=Secret('MEETUP_GROUP').value,
-                 email=Secret('EMAIL').value,
-                 password=Secret('PASSWORD').value,
-                 client_id=Secret('CLIENT_ID').value,
-                 client_secret=Secret('CLIENT_SECRET').value,
-                 redirect_uri=Secret('REDIRECT_URI').value,
+                 group,
+                 email=None,
+                 password=None,
+                 client_id=None,
+                 client_secret=None,
+                 redirect_uri=None,
+                 default_space_name='',
+                 default_space_address_street='',
+                 default_space_address_zip='',
+                 default_space_address_city='',
+                 default_space_address_countrycode='',
+                 default_space_how_to_find_us='',
+                 default_space_timezonestring='America/Los_Angeles',
                  show_log=True,
                  test=False):
         self.logs = ['self.__init__']
@@ -26,13 +35,31 @@ class Meetup():
         self.client_id = client_id
         self.client_secret = client_secret,
         self.redirect_uri = redirect_uri
+
+        self.default_space_name = default_space_name
+        self.default_space_address = {
+            "STREET": default_space_address_street,
+            "ZIP": default_space_address_zip,
+            "CITY": default_space_address_city,
+            "COUNTRYCODE": default_space_address_countrycode,
+        }
+        self.default_space_how_to_find_us = default_space_how_to_find_us
+        self.default_space_timezonestring = default_space_timezonestring
+
         self.setup_done = True if group else False
         self.help = 'https://www.meetup.com/meetup_api/docs/'
         self.test = test
 
     @property
     def config(self):
-        return {"group": Config('EVENTS.MEETUP_GROUP').value}
+        return {
+            "group": self.group,
+            "email": self.email,
+            "password": self.password,
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
+            "redirect_uri": self.redirect_uri
+        }
 
     @property
     def access_token(self):
@@ -45,117 +72,20 @@ class Meetup():
         if self.show_log == True:
             Log().print('{}'.format(text), os.path.basename(__file__), self.started)
 
-    # define functions to get event details based on meetup data
-    def str_name_en_US(self, event):
-        return event['name']
-
-    def int_UNIXtime_event_start(self, event):
-        return round(event['time']/1000)
-
-    def int_UNIXtime_event_end(self, event):
-        return round((event['time']/1000)+(event['duration']/1000))
-
-    def int_minutes_duration(self, event):
-        return round((event['duration']/1000)/60)
-
-    def url_featured_photo(self, event):
-        return event['featured_photo']['photo_link'] if 'featured_photo' in event else event['image_url'] if 'image_url' in event and event['image_url'] else None
-
-    def text_description_en_US(self, event):
-        return event['description']
-
-    def str_location(self, event):
-        from meetup_functions.str_location import MeetupSTRlocation
-        return MeetupSTRlocation(event).value
-
-    def one_space(self, event):
-        from meetup_functions.one_space import MeetupOneSpace
-        return MeetupOneSpace(event).value
-
-    def one_guilde(self, event):
-        from meetup_functions.one_guilde import MeetupOneGuilde
-        return MeetupOneGuilde(event).value
-
-    def str_series_id(self, event):
-        return event['series']['id'] if 'series' in event else None
-
-    def int_series_startUNIX(self, event):
-        return round(event['series']['start_date'] / 1000) if 'series' in event and 'start_date' in event['series'] else None
-
-    def int_series_endUNIX(self, event):
-        return round(event['series']['end_date'] / 1000) if 'series' in event and 'end_date' in event['series'] else None
-
-    def text_series_timing(self, event):
-        from meetup_functions.text_series_timing import MeetupTextSeriesTiming
-        return MeetupTextSeriesTiming(event).value
-
-    def url_meetup_event(self, event):
-        return event['link'] if 'link' in event else None
-
-    def int_UNIXtime_created(self, event):
-        return round(event['created']/1000)
-
-    def int_UNIXtime_updated(self, event):
-        return round(event['updated']/1000) if 'updated' in event else None
-
-    def int_timezoneToOffset(self, timezone_name):
-        from meetup_functions.int_timezoneToOffset import MeetupIntTimezoneToOffset
-        return MeetupIntTimezoneToOffset(timezone_name).value
-
-    def list_offsetToTimezone(self, offset_ms):
-        from meetup_functions.list_offsetToTimezone import MeetupListOffsetToTimezone
-        return MeetupListOffsetToTimezone(offset_ms).value
-
-    def str_timezone(self, event):
-        from meetup_functions.str_timezone import MeetupSTRtimezone
-        return MeetupSTRtimezone(event).value
-
-    @property
-    def events(self):
-        # Events
-        # https://www.meetup.com/meetup_api/docs/:urlname/events/#list
-        import requests
-
-        self.log('events()')
-
-        self.response = requests.get('https://api.meetup.com/'+self.group+'/events',
-                                     params={
-                                         'fields': ['group_key_photo', 'series', 'simple_html_description', 'rsvp_sample'],
-                                         'photo-host': 'public',
-                                         'page': 200,
-                                         'offset': 0
-                                     })
-
-        self.response_json = self.response.json()
-        if 'errors' in self.response_json and self.response_json['errors'][0]['code'] == 'group_error':
-            self.log('-> ERROR: Group name doesnt exist')
-            return False
-        else:
-            return [
-                {
-                    'str_name_en_US': self.str_name_en_US(event),
-                    'int_UNIXtime_event_start': self.int_UNIXtime_event_start(event),
-                    'int_UNIXtime_event_end': self.int_UNIXtime_event_end(event),
-                    'int_minutes_duration': self.int_minutes_duration(event),
-                    'url_featured_photo': self.url_featured_photo(event),
-                    'text_description_en_US': self.text_description_en_US(event),
-                    'str_location': self.str_location(event),
-                    'one_space': self.one_space(event),
-                    'one_guilde': self.one_guilde(event),
-                    'str_series_id': self.str_series_id(event),
-                    'int_series_startUNIX': self.int_series_startUNIX(event),
-                    'int_series_endUNIX': self.int_series_endUNIX(event),
-                    'text_series_timing': self.text_series_timing(event),
-                    'url_meetup_event': self.url_meetup_event(event),
-                    'int_UNIXtime_created': self.int_UNIXtime_created(event),
-                    'int_UNIXtime_updated': self.int_UNIXtime_updated(event),
-                    'str_timezone': self.str_timezone(event)
-                } for event in self.response_json
-            ]
+    def events(self,
+               results_per_page=200,
+               pages='all',
+               maximum_num_events=10000,
+               fields=['group_key_photo', 'series',
+                       'simple_html_description', 'rsvp_sample']
+               ):
+        from meetup_functions.events import MeetupEvents
+        return MeetupEvents(self, results_per_page,
+                            pages, maximum_num_events, fields).value
 
     def create(self, event, announce=False, publish_status='draft'):
         from meetup_functions.create import MeetupCreate
-        return MeetupCreate(self.access_token, self.group, event, announce, publish_status).value
+        return MeetupCreate(self.access_token, self.group, event, announce, publish_status, self.default_space_how_to_find_us).value
 
     def delete(self, event):
         from meetup_functions.delete import MeetupDelete
