@@ -38,28 +38,30 @@ class MeetupUpcomingEvents():
 
             self.value = []
             self.offset = 0
+            self.num_of_unchanged_rounds = 0
+            parameter = {
+                'access_token': access_token,
+                'sign': True,
+                'page': results_per_page,
+                'offset': self.offset
+            }
+            if city:
+                gn = geocoders.GeoNames(username='meetupapi')
+                parameter['lat'], parameter['lon'] = gn.geocode(city)[1]
+            elif lat and lon:
+                parameter['lat'] = lat
+                parameter['lon'] = lon
+            if text:
+                parameter['text'] = text
+            if topic_category:
+                parameter['topic_category'] = topic_category
             self.response_json = ['']
 
             if pages == 'all':
                 pages = 10000
 
             while pages >= self.offset and len(self.response_json) > 0:
-                parameter = {
-                    'access_token': access_token,
-                    'sign': True,
-                    'page': results_per_page,
-                    'offset': self.offset
-                }
-                if city:
-                    gn = geocoders.GeoNames(username='meetupapi')
-                    parameter['lat'], parameter['lon'] = gn.geocode(city)[1]
-                elif lat and lon:
-                    parameter['lat'] = lat
-                    parameter['lon'] = lon
-                if text:
-                    parameter['text'] = text
-                if topic_category:
-                    parameter['topic_category'] = topic_category
+                parameter['offset'] = self.offset
 
                 self.response = requests.get('https://api.meetup.com/find/upcoming_events',
                                              params=parameter).json()
@@ -78,9 +80,16 @@ class MeetupUpcomingEvents():
                         new_events = [
                             x for x in new_events if self.event_is_online(x)]
 
-                    if 'english' in filter:
+                    if len([x for x in filter if 'lang:' in x]) > 0:
+                        if type(filter) == str:
+                            language = filter.split('lang:')[1]
+                        else:
+                            for entry in filter:
+                                if 'lang:' in entry:
+                                    language = entry.split('lang:')[1]
+                                    break
                         new_events = [
-                            x for x in new_events if detect(x['name']) == 'en']
+                            x for x in new_events if detect(x['name']) == language]
 
                     if min_num_attendees:
                         new_events = [
@@ -94,12 +103,25 @@ class MeetupUpcomingEvents():
                                     'https://meetup.com/'+event['group']['urlname'])
                         new_events = new_events_groups
 
+                self.previous_count = len(self.value)
                 self.value += new_events
+                self.value = self.value[:maximum_num_results]
+                self.new_count = len(self.value)
+                if self.previous_count == self.new_count:
+                    self.num_of_unchanged_rounds += 1
+
                 self.log('Collected {} {}'.format(len(self.value),
                                                   'groups' if 'group_urls_only' in filter else 'events'))
 
-                if len(self.value) >= maximum_num_results:
-                    self.log('Collected maximum number of {}'.format('groups' if 'group_urls_only' in filter else 'events'))
+                if len(self.value) == maximum_num_results:
+                    self.log('Collected maximum number of {}'.format(
+                        'groups' if 'group_urls_only' in filter else 'events'))
+                    break
+
+                # see if 10 pages in a row num of results doesn't change
+                if self.num_of_unchanged_rounds == 10:
+                    self.log(
+                        'Number of results isnt changing anymore. Exiting loop.')
                     break
 
                 # add waiting to prevent meetup api limitation

@@ -34,12 +34,43 @@ groupname = str
 Optional inputs for .events():
 ```
 results_per_page = int
-pages = 'all' or int
-maximum_num_events = int
+pages = 'all' or int ('all' is default)
+maximum_num_results = int
 fields = list
 ```
 
 ### API credentials required
+
+#### Meetup().upcoming_events()
+
+Based on [https://www.meetup.com/meetup_api/docs/find/upcoming_events/](https://www.meetup.com/meetup_api/docs/find/upcoming_events/)
+
+Will return a list of upcoming events on Meetup.
+
+Required inputs for Meetup():
+```
+groupname = str
+client_id = str
+client_secret = str
+redirect_uri = str
+```
+
+Optional inputs for .upcoming_events():
+```
+results_per_page = int
+pages = 'all' or int ('all' is default)
+maximum_num_results = int
+city = str (Example: 'Berlin, Germany' or 'New York, NY')
+lat = float
+lon = float
+text = str
+topic_category = int
+min_num_attendees = int
+filter = list (options are: 
+    'online_meetups' -> filters for online meetups, on zoom, skype, jitsi, etc.
+    'lang:{language short code}' -> filter for events who's title is in the language you define. Example: 'lang:en' or 'lang:de'
+    'group_urls_only' -> returns urls of groups instead of events as json
+```
 
 #### Meetup().create()
 
@@ -51,8 +82,6 @@ If the request fails, Meetup().create returns None.
 Required inputs for Meetup():
 ```
 groupname = str
-email = str, (from your meetup account, for authentication)
-password = str (from your meetup account, for authentication)
 client_id = str
 client_secret = str
 redirect_uri = str
@@ -100,8 +129,6 @@ If the request fails, Meetup().delete returns None.
 Required inputs for Meetup():
 ```
 groupname = str
-email = str, (from your meetup account, for authentication)
-password = str (from your meetup account, for authentication)
 client_id = str
 client_secret = str
 redirect_uri = str
