@@ -6,7 +6,7 @@ __pycache__/
 .DS_store
 
 pythonvenv/
-
+secrets.json
 .vscode
 
 # C extensions

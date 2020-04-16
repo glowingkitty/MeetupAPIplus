@@ -1,75 +1,89 @@
 import json
+import os
+import random
 import time
+import webbrowser
 
 import requests
-from PyWebScraper import Scraper
-from selenium.webdriver.common.by import By
 
 from MeetupAPI.log import Log
 
 
 class MeetupAcessToken():
-    def __init__(self, access_token, access_token_valid_upto, email, password, client_id, client_secret, redirect_uri):
+    def __init__(self, access_token, access_token_valid_upto, client_id, client_secret, redirect_uri):
         self.logs = ['self.__init__']
         self.started = round(time.time())
-        self.access_token = access_token
-        self.access_token_valid_upto = access_token_valid_upto
-        self.email = email
-        self.password = password
-        self.client_id = client_id
-        self.client_secret = client_secret,
-        self.redirect_uri = redirect_uri
 
         # check if still usable token is saved in secrets.json - else get new one
-        if self.access_token and self.access_token_valid_upto > time.time()+60:
-            self.value = self.access_token
-
-        # check if required fields exist
-        if not self.client_id or not self.client_secret or not self.redirect_uri or not self.email or not self.password:
-            self.log('-> ERROR: Meetup secrets incomplete!')
-            self.value = None
+        if access_token and access_token_valid_upto > time.time()+60:
+            self.value = access_token, access_token_valid_upto
 
         else:
-            # else: following steps to get an API token - see https://www.meetup.com/meetup_api/auth/
+            # check if required fields exist
+            if not client_id or not client_secret or not redirect_uri:
+                self.log('-> ERROR: Meetup secrets incomplete!')
+                self.value = None, None
 
-            # Step 1: Get code to get access token, by loggin into meetup account
-            login_page = Scraper(
-                'https://secure.meetup.com/oauth2/authorize?scope=basic+event_management&client_id={}&response_type=code&redirect_uri={}'.format(self.client_id, self.redirect_uri), scraper_type='selenium', auto_close_selenium=False)
-            login_page.selenium.find_element(By.LINK_TEXT, 'Continue').click()
-            login_page.selenium.find_element_by_id(
-                'email').send_keys(self.email)
-            login_page.selenium.find_element_by_id(
-                'password').send_keys(self.password)
-            login_page.selenium.find_element_by_id('loginFormSubmit').click()
-            time.sleep(10)
-            code = login_page.selenium.current_url.split('code=')[1]
-            login_page.selenium.close()
-
-            # Step 2: get access token
-            self.response_json = requests.post('https://secure.meetup.com/oauth2/access',
-                                               params={
-                                                   'client_id': self.client_id,
-                                                   'client_secret': self.client_secret,
-                                                   'code': code,
-                                                   'response_type': 'code',
-                                                   'grant_type': 'authorization_code',
-                                                   'redirect_uri': self.redirect_uri,
-                                                   'scope': ['basic', 'event_management']
-                                               }).json()
-
-            if 'access_token' in self.response_json:
-                with open('_setup/secrets.json') as json_file:
-                    secrets = json.load(json_file)
-                secrets['MEETUP']['ACCESS_TOKEN'] = self.response_json['access_token']
-                secrets['MEETUP']['ACCESS_TOKEN_VALID_UPTO'] = round(
-                    time.time()+self.response_json['expires_in'])
-                with open('_setup/secrets.json', 'w') as outfile:
-                    json.dump(secrets, outfile, indent=4)
-                self.value = self.response_json['access_token']
             else:
-                self.log(
-                    '-> ERROR: Failed to get Access Token - {}'.format(self.response_json))
-                self.value = None
+                self.log('Getting Access Token from Meetup...')
+                # else: following steps to get an API token - see https://www.meetup.com/meetup_api/auth/
+
+                # Step 1: Open page to access token page
+                self.log('Trying to open https://secure.meetup.com/oauth2/authorize?scope=basic+event_management&client_id={}&response_type=code&redirect_uri={}'.format(
+                    client_id, redirect_uri))
+                webbrowser.open('https://secure.meetup.com/oauth2/authorize?scope=basic+event_management&client_id={}&response_type=code&redirect_uri={}'.format(
+                    client_id, redirect_uri))
+
+                code_input = input(
+                    'Login to generate the access key and enter the URL which you got redirected to (which ends with code=...)\n')
+                while 'code=' not in code_input:
+                    code_input = input(
+                        'Login to generate the access key and enter the URL which you got redirected to (which ends with code=...)\n')
+
+                code = code_input.split('code=')[1]
+
+                # Step 2: get access token
+                self.response_json = requests.post('https://secure.meetup.com/oauth2/access',
+                                                   params={
+                                                       'client_id': client_id,
+                                                       'client_secret': client_secret,
+                                                       'code': code,
+                                                       'response_type': 'code',
+                                                       'grant_type': 'authorization_code',
+                                                       'redirect_uri': redirect_uri,
+                                                       'scope': ['basic', 'event_management']
+                                                   }).json()
+
+                if 'access_token' in self.response_json:
+                    access_token = self.response_json['access_token']
+                    access_token_valid_upto = round(
+                        time.time()+self.response_json['expires_in'])
+                    # return access token and expire time and save in secrets.json
+                    if os.path.exists('_setup/secrets.json'):
+                        with open('_setup/secrets.json') as json_file:
+                            secrets = json.load(json_file)
+                    elif os.path.exists('secrets.json'):
+                        with open('secrets.json') as json_file:
+                            secrets = json.load(json_file)
+                    else:
+                        secrets = {}
+
+                    secrets['MEETUP'] = {}
+                    secrets['MEETUP']['ACCESS_TOKEN'] = access_token
+                    secrets['MEETUP']['ACCESS_TOKEN_VALID_UPTO'] = access_token_valid_upto
+
+                    if os.path.exists('_setup/secrets.json'):
+                        with open('_setup/secrets.json', 'w') as outfile:
+                            json.dump(secrets, outfile, indent=4)
+                    else:
+                        with open('secrets.json', 'w') as outfile:
+                            json.dump(secrets, outfile, indent=4)
+
+                    self.value = access_token, access_token_valid_upto
+                else:
+                    self.log(
+                        '-> ERROR: Failed to get Access Token - {}'.format(self.response_json))
+                    self.value = None
 
     def log(self, text):
         import os
