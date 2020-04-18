@@ -138,3 +138,30 @@ Required inputs for .delete():
 ```
 event = Event class (with field 'url_meetup_event' and Event.save() function)
 ```
+
+
+#### Meetup().message()
+
+Meetup().message() can send a message (including optional placeholders) to one or multiple other users.
+
+Required inputs for Meetup():
+```
+email = str (required because Meetup doesn't have an API function for sending messages, so it's done via Selenium)
+password = str (required because Meetup doesn't have an API function for sending messages, so it's done via Selenium)
+```
+
+Required inputs for .message():
+```
+receiver_member_ids = str or list
+message = str
+```
+
+Optional inputs for .message():
+```
+json_placeholders = list (with json entries in this scheme: {'keyword':xxxx,'replace_with':yyyyy})
+save_log = boolean
+log_path = str (default: 'sent_messages_log.json')
+spam_prevention = boolean (default: True, prevents sending the same message multiple times to the same user or sending too many messages in a short time period to the same user)
+spam_prevention_wait_time_minutes = int (default: 1440)
+test = boolean (default: False, makes a screenshot of the message instead of sending the message)
+```

@@ -24,7 +24,10 @@ class Meetup(MeetupFields):
                  default_space_how_to_find_us='',
                  default_space_timezonestring='America/Los_Angeles',
                  show_log=True,
-                 test=False):
+                 test=False,
+                 email=None,
+                 password=None
+                 ):
         self.logs = ['self.__init__']
         self.started = round(time.time())
         self.show_log = show_log
@@ -50,6 +53,9 @@ class Meetup(MeetupFields):
         self.client_secret = client_secret,
         self.redirect_uri = redirect_uri
 
+        self.email = email
+        self.password = password
+
         self.default_space_name = default_space_name
         self.default_space_address = {
             "STREET": default_space_address_street,
@@ -61,7 +67,7 @@ class Meetup(MeetupFields):
         self.default_space_timezonestring = default_space_timezonestring
 
         self.setup_done = True if group or (access_token and access_token_valid_upto) or (
-            client_id and client_secret and redirect_uri) else False
+            client_id and client_secret and redirect_uri) or (email and password) else False
         self.help = 'https://www.meetup.com/meetup_api/docs/'
         self.test = test
 
@@ -139,3 +145,15 @@ class Meetup(MeetupFields):
     def delete(self, event):
         from MeetupAPI.meetup_functions.delete import MeetupDelete
         return MeetupDelete(self.access_token, self.group, event).value
+
+    def message(self,
+                receiver_member_ids,
+                message,
+                json_placeholders=[],
+                save_log=True,
+                log_path='sent_messages_log.json',
+                spam_prevention=True,
+                spam_prevention_wait_time_minutes=1440,
+                test=False):
+        from MeetupAPI.meetup_functions.message import MeetupMessage
+        return MeetupMessage(self.email, self.password, receiver_member_ids, message, json_placeholders, save_log, log_path, spam_prevention, spam_prevention_wait_time_minutes, test).value

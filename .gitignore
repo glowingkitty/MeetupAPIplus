@@ -7,6 +7,9 @@ __pycache__/
 
 pythonvenv/
 secrets.json
+sent_messages_log.json
+message_test.png
+error_landingpage_not_loaded.png
 .vscode
 
 # C extensions
