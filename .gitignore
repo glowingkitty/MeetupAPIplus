@@ -9,6 +9,9 @@ pythonvenv/
 secrets.json
 sent_messages_log.json
 message_test.png
+ignore_receivers.json
+processed_cities.json
+message_to_organizer.txt
 error_landingpage_not_loaded.png
 .vscode
 

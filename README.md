@@ -144,15 +144,9 @@ event = Event class (with field 'url_meetup_event' and Event.save() function)
 
 Meetup().message() can send a message (including optional placeholders) to one or multiple other users.
 
-Required inputs for Meetup():
-```
-email = str (required because Meetup doesn't have an API function for sending messages, so it's done via Selenium)
-password = str (required because Meetup doesn't have an API function for sending messages, so it's done via Selenium)
-```
-
 Required inputs for .message():
 ```
-receiver_member_ids = str or list
+receiver_members = dict or list (Example: {'name':'xxxx','id':'yyyy'})
 message = str
 ```
 
@@ -164,4 +158,46 @@ log_path = str (default: 'sent_messages_log.json')
 spam_prevention = boolean (default: True, prevents sending the same message multiple times to the same user or sending too many messages in a short time period to the same user)
 spam_prevention_wait_time_minutes = int (default: 1440)
 test = boolean (default: False, makes a screenshot of the message instead of sending the message)
+auto_close_selenium = boolean (default: True, closes the web browser when finished with sending a message)
+scraper = PyWebScraper class (default: None, needed if you want to send multiple messages in the same browser window)
+```
+
+
+#### Meetup().message_group_organizer()
+
+Meetup().message_group_organizer() can message the group organizers from all groups of all upcoming events in selected cities. Have in mind that there is a limit of 20 messages/day integrated into this function, to prevent you getting blocked by Meetup.
+
+Optional inputs for .message_group_organizer():
+```
+message = str (default: None)
+message_path = str (default: 'message_to_organizer.txt', create a text file in that path to define a message which will be send)
+cities = list (default: [
+                        'San Francisco, CA',
+                        'Los Angeles, CA',
+                        'New York, NY',
+                        'Seattle, WA',
+                        'Boston, MA',
+                        'Chicago, IL',
+                        'Detroit, Michigan',
+                        'Washington, DC',
+                        'Miami, FL',
+                        'Toronto, Canada',
+                        'Barcelona, Spain',
+                        'Madrid, Spain',
+                        'Paris, France',
+                        'Rome, Italy',
+                        'Milano, Italy',
+                        'London, UK',
+                        'Berlin, Germany',
+                        'Munich, Germany',
+                        'Vienna, Austria',
+                        'Amsterdam, Netherlands',
+                        'Singapore, Singapore',
+                        'Hong Kong, Hong Kong',
+                        'Tokyo, Japan',
+                        'Seoul, South Korea'
+                    ])
+cities_processed_path = str (default: 'processed_cities.json', where the progress of processed cities will be saved)
+maximum_num_results = int (default: 20, how many group organizer per city should be messaged. Have in mind: the daily messaging limit is 20)
+filters = list (default: ['online_meetups', 'lang:en'], filters for upcoming_events, from which the group organizers will be collected)
 ```

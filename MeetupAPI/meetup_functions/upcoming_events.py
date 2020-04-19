@@ -115,23 +115,23 @@ class MeetupUpcomingEvents():
                                     'https://meetup.com/'+event['group']['urlname'])
                         new_events = new_events_groups
 
-                    if 'event_organizer_ids_only' in filter:
-                        new_events_organizer_ids = []
+                    if 'event_organizer_only' in filter:
+                        new_events_organizer = []
                         for event in new_events:
                             if 'event_hosts' in event:
-                                if event['event_hosts'][0]['id'] not in self.value and event['event_hosts'][0]['id'] not in new_events_organizer_ids:
-                                    new_events_organizer_ids.append(
-                                        event['event_hosts'][0]['id'])
+                                if {'name': event['event_hosts'][0]['name'], 'id': event['event_hosts'][0]['id']} not in self.value and {'name': event['event_hosts'][0]['name'], 'id': event['event_hosts'][0]['id']} not in new_events_organizer:
+                                    new_events_organizer.append(
+                                        {'name': event['event_hosts'][0]['name'], 'id': event['event_hosts'][0]['id']})
 
-                                    if len(self.value)+len(new_events_organizer_ids) == maximum_num_results:
+                                    if len(self.value)+len(new_events_organizer) == maximum_num_results:
                                         break
 
-                        new_events = new_events_organizer_ids
+                        new_events = new_events_organizer
 
-                    if 'group_organizer_ids_only' in filter:
+                    if 'group_organizer_only' in filter:
                         from MeetupAPI.meetup import Meetup
 
-                        new_events_organizer_ids = []
+                        new_events_organizer = []
                         for event in new_events:
                             group_details = Meetup().group_details(
                                 event['group']['urlname'])
@@ -141,14 +141,14 @@ class MeetupUpcomingEvents():
                                 else:
                                     organizer = group_details['organizer'][0]
 
-                                if organizer['id'] not in self.value and organizer['id'] not in new_events_organizer_ids:
-                                    new_events_organizer_ids.append(
-                                        organizer['id'])
+                                if {'name': organizer['name'], 'id': organizer['id']} not in self.value and {'name': organizer['name'], 'id': organizer['id']} not in new_events_organizer:
+                                    new_events_organizer.append(
+                                        {'name': organizer['name'], 'id': organizer['id']})
 
-                                    if len(self.value)+len(new_events_organizer_ids) == maximum_num_results:
+                                    if len(self.value)+len(new_events_organizer) == maximum_num_results:
                                         break
 
-                        new_events = new_events_organizer_ids
+                        new_events = new_events_organizer
 
                 self.previous_count = len(self.value)
                 self.value += new_events
@@ -157,12 +157,10 @@ class MeetupUpcomingEvents():
                 if self.previous_count == self.new_count:
                     self.num_of_unchanged_rounds += 1
 
-                self.log('Collected {} {}'.format(len(self.value),
-                                                  'groups' if (filter and 'group_urls_only' in filter) else 'events'))
+                self.log('Collected {} {}'.format(len(self.value), 'results'))
 
                 if len(self.value) == maximum_num_results:
-                    self.log('Collected maximum number of {}'.format(
-                        'groups' if (filter and 'group_urls_only' in filter) else 'events'))
+                    self.log('Collected maximum number of {}'.format('results'))
                     break
 
                 # see if 10 pages in a row num of results doesn't change

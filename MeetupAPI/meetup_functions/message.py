@@ -10,29 +10,32 @@ from MeetupAPI.log import Log
 
 class MeetupMessage():
     def __init__(self,
-                 email,
-                 password,
-                 receiver_member_ids,
+                 receiver_members,
                  message,
                  json_placeholders=[],
                  save_log=True,
                  log_path='sent_messages_log.json',
                  spam_prevention=True,
                  spam_prevention_wait_time_minutes=1440,
-                 test=False):
+                 test=False,
+                 auto_close_selenium=True,
+                 scraper=None,
+                 ):
         self.logs = ['self.__init__']
         self.started = round(time.time())
+        self.scraper = scraper
 
         self.log('MeetupMessage()')
 
-        # check if email and password entered
-        if not (email and password):
-            self.log('ERROR: Email and password required to send messages from your account, since Meetup doesnt have this feature yet in their API.')
-            self.value = False
+        if self.reached_limit_for_today == True:
+            self.log('ERROR: You reached the maximum limit of sent messages per day. This limit is in your own interest, to prevent you from getting blocked by Meetup.')
+            if self.scraper.selenium:
+                self.scraper.selenium.close()
+            self.value = False, None
 
         else:
-            self.receiver_member_ids = receiver_member_ids if type(
-                receiver_member_ids) == list else [receiver_member_ids]
+            self.receiver_members = receiver_members if type(
+                receiver_members) == list else [receiver_members]
             self.message = self.message_without_placeholders(
                 message, json_placeholders)
             self.messages_log = []
@@ -42,71 +45,65 @@ class MeetupMessage():
             self.boolean_spam_prevention = spam_prevention
             self.int_spam_prevention_wait_time_minutes = spam_prevention_wait_time_minutes
 
-            # login on meetup
-            self.log('-> Login into Meetup...')
-            self.scraper = Scraper(url='https://secure.meetup.com/login/',
-                                   scraper_type='selenium', auto_close_selenium=False)
+            if not self.scraper:
+                # login on meetup
+                self.log('A web browser will pop up in a second. Enter your login data there, solve the "I am not a robot" test (if it shows up) and click on "Login".')
+                self.scraper = Scraper(url='https://secure.meetup.com/login/',
+                                       scraper_type='selenium', headless=False, auto_close_selenium=False)
 
-            # click cookie consent
-            time.sleep(random.randint(1, 6))
-            self.scraper.selenium.find_element_by_css_selector(
-                'a.margin-none:nth-child(1)').click()
-            time.sleep(random.randint(1, 6))
-            self.scraper.selenium.find_element_by_id('email').send_keys(email)
-            time.sleep(random.randint(1, 6))
-            self.scraper.selenium.find_element_by_id(
-                'password').send_keys(password)
-            self.scraper.selenium.find_element_by_id('loginFormSubmit').click()
-
-            # check if scraper was redirected to landingpage or is still on login page (means something went wrong, robot check most likely)
-            if self.scraper.selenium.current_url != 'https://www.meetup.com/':
-                self.log(
-                    'ERROR: Couldnt login into Meetup. Probably a "prove you are not a robot" test. To fix this: open a new "Private Window" in your web browser, login and solve the "I am not a robot" test. Then run Meetup().message() again.')
-                self.scraper.selenium.save_screenshot(
-                    'error_landingpage_not_loaded.png')
-                self.scraper.selenium.close()
-                self.value = False
+                # check if user loggedin, then continue
+                while self.scraper.selenium.current_url != 'https://www.meetup.com/':
+                    time.sleep(0.5)
 
             # open message window and send message/s, if spam test passed
-            else:
-                for receiver_id in self.receiver_member_ids:
-                    if self.spam_check_passed(receiver_id, self.message) == False:
-                        self.log(
-                            'ERROR: Failed to send message. Seems you already messaged that member recently. Since spam prevention is active, the member didnt got messaged again.')
+            for receiver in self.receiver_members:
+                if self.spam_check_passed(receiver['id'], self.message) == False:
+                    self.log(
+                        'ERROR: Failed to send message. Seems you already messaged {} recently. Since spam prevention is active, {} didnt got messaged again.'.format(receiver['name'], receiver['name']))
 
+                elif self.on_ignore_list(receiver['name']) == True:
+                    self.log('ERROR: User {} is on ignore_receivers.json list. Therefore there was no message sent to user.'.format(
+                        receiver['name']))
+
+                else:
+                    self.log(
+                        '-> Send message to {}'.format(receiver['name']))
+                    self.scraper.selenium.get(
+                        'https://secure.meetup.com/messages/?new_convo=true&member_id={}'.format(receiver['id']))
+                    time.sleep(random.randint(2, 9))
+                    textfield = self.scraper.selenium.find_element_by_id(
+                        'messaging-new-convo')
+                    textfield.click()
+                    textfield.send_keys(self.message)
+                    time.sleep(random.randint(1, 6))
+
+                    if test:
+                        self.scraper.selenium.save_screenshot(
+                            'message_test.png')
                     else:
-                        self.log('-> Send message to {}'.format(receiver_id))
-                        self.scraper.selenium.get(
-                            'https://secure.meetup.com/messages/?new_convo=true&member_id={}'.format(receiver_id))
-                        time.sleep(random.randint(2, 9))
-                        textfield = self.scraper.selenium.find_element_by_id(
-                            'messaging-new-convo')
-                        textfield.click()
-                        textfield.send_keys(self.message)
-                        time.sleep(random.randint(1, 6))
+                        self.scraper.selenium.find_element_by_id(
+                            'messaging-new-send').click()
 
-                        if test:
-                            self.scraper.selenium.save_screenshot(
-                                'message_test.png')
-                        else:
-                            self.scraper.selenium.find_element_by_id(
-                                'messaging-new-send').click()
+                    # if last receiver id, close browser
+                    if auto_close_selenium and (receiver == self.receiver_members[-1]):
+                        self.scraper.selenium.close()
 
-                        # if last receiver id, close browser
-                        if receiver_id == self.receiver_member_ids[-1]:
-                            self.scraper.selenium.close()
+                    # save that message was sent, to prevent spam
+                    if not test and self.boolean_save_log:
+                        self.messages_log.insert(0, {
+                            'int_time_sent_unix': round(time.time()),
+                            'str_receiver_member_id': receiver['id'],
+                            'str_receiver_member_name': receiver['name'],
+                            'str_message_sent': self.message
+                        })
+                        with open(self.str_log_path, 'w') as outfile:
+                            json.dump(self.messages_log,
+                                      outfile, indent=4)
 
-                        # save that message was sent, to prevent spam
-                        if not test and self.boolean_save_log:
-                            self.messages_log.insert(0, {
-                                'int_time_sent_unix': round(time.time()),
-                                'str_receiver_member_id': receiver_id,
-                                'str_message_sent': self.message
-                            })
-                            with open(self.str_log_path, 'w') as outfile:
-                                json.dump(self.messages_log, outfile, indent=4)
+                        self.log('Sent message to {}'.format(
+                            receiver['name']))
 
-                self.value = True
+            self.value = True, self.scraper
 
     def spam_check_passed(self, receiver_id, message):
         # see if person was already messaged the same message or already messaged within xx minutes, to prevent spam
@@ -138,6 +135,34 @@ class MeetupMessage():
                 '{{'+placeholder['keyword']+'}}', placeholder['replace_with'])
 
         return message
+
+    def on_ignore_list(self, receiver_name):
+        if os.path.exists('ignore_receivers.json'):
+            with open('ignore_receivers.json') as json_file:
+                ignored_receivers = json.load(json_file)
+
+                for keyword in ignored_receivers:
+                    if keyword in receiver_name:
+                        return True
+
+        return False
+
+    def reached_limit_for_today(self):
+        if os.path.exists(self.str_log_path):
+            with open(self.str_log_path) as json_file:
+                self.messages_log = json.load(json_file)
+
+                sent_messages_in_last_24_hours = 0
+
+                # count existing messages from last 24 hours and see if limit is reached
+                for log_message in self.messages_log:
+                    if log_message['int_time_sent_unix'] >= (time.time()-24*60*60):
+                        sent_messages_in_last_24_hours += 1
+
+                        if sent_messages_in_last_24_hours == 20:
+                            return True
+
+        return False
 
     def log(self, text):
         import os

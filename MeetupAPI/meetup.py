@@ -24,9 +24,7 @@ class Meetup(MeetupFields):
                  default_space_how_to_find_us='',
                  default_space_timezonestring='America/Los_Angeles',
                  show_log=True,
-                 test=False,
-                 email=None,
-                 password=None
+                 test=False
                  ):
         self.logs = ['self.__init__']
         self.started = round(time.time())
@@ -53,9 +51,6 @@ class Meetup(MeetupFields):
         self.client_secret = client_secret,
         self.redirect_uri = redirect_uri
 
-        self.email = email
-        self.password = password
-
         self.default_space_name = default_space_name
         self.default_space_address = {
             "STREET": default_space_address_street,
@@ -68,17 +63,6 @@ class Meetup(MeetupFields):
 
         self.help = 'https://www.meetup.com/meetup_api/docs/'
         self.test = test
-
-    @property
-    def config(self):
-        return {
-            "group": self.group,
-            "email": self.email,
-            "password": self.password,
-            "client_id": self.client_id,
-            "client_secret": self.client_secret,
-            "redirect_uri": self.redirect_uri
-        }
 
     @property
     def access_token(self):
@@ -162,13 +146,62 @@ class Meetup(MeetupFields):
         return MeetupDelete(self.access_token, self.group, event).value
 
     def message(self,
-                receiver_member_ids,
+                receiver_members,
                 message,
                 json_placeholders=[],
                 save_log=True,
                 log_path='sent_messages_log.json',
                 spam_prevention=True,
                 spam_prevention_wait_time_minutes=1440,
-                test=False):
+                test=False,
+                auto_close_selenium=True,
+                scraper=None
+                ):
         from MeetupAPI.meetup_functions.message import MeetupMessage
-        return MeetupMessage(self.email, self.password, receiver_member_ids, message, json_placeholders, save_log, log_path, spam_prevention, spam_prevention_wait_time_minutes, test).value
+        return MeetupMessage(receiver_members, message, json_placeholders, save_log, log_path, spam_prevention, spam_prevention_wait_time_minutes, test, auto_close_selenium, scraper).value
+
+    def message_group_organizer(self,
+                                message=None,
+                                message_path='message_to_organizer.txt',
+                                cities=[
+                                    'San Francisco, CA',
+                                    'Los Angeles, CA',
+                                    'New York, NY',
+                                    'Seattle, WA',
+                                    'Boston, MA',
+                                    'Chicago, IL',
+                                    'Detroit, Michigan',
+                                    'Washington, DC',
+                                    'Miami, FL',
+                                    'Toronto, Canada',
+                                    'Barcelona, Spain',
+                                    'Madrid, Spain',
+                                    'Paris, France',
+                                    'Rome, Italy',
+                                    'Milano, Italy',
+                                    'London, UK',
+                                    'Berlin, Germany',
+                                    'Munich, Germany',
+                                    'Vienna, Austria',
+                                    'Amsterdam, Netherlands',
+                                    'Singapore, Singapore',
+                                    'Hong Kong, Hong Kong',
+                                    'Tokyo, Japan',
+                                    'Seoul, South Korea'
+                                ],
+                                cities_processed_path='processed_cities.json',
+                                maximum_num_results=20,
+                                filters=['online_meetups', 'lang:en']
+                                ):
+        from MeetupAPI.meetup_functions.message_group_organizer import MeetupMessageGroupOrganizer
+        return MeetupMessageGroupOrganizer(
+            client_id=self.client_id,
+            client_secret=self.client_secret,
+            redirect_uri=self.redirect_uri,
+            message=message,
+            message_path=message_path,
+            cities=cities,
+            cities_processed_path=cities_processed_path,
+            maximum_num_results=maximum_num_results,
+            filters=filters
+        ).value
