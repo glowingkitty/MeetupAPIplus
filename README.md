@@ -39,6 +39,29 @@ maximum_num_results = int
 fields = list
 ```
 
+
+#### Meetup().message()
+
+Meetup().message() can send a message (including optional placeholders) to one or multiple other users.
+
+Required inputs for .message():
+```
+receiver_members = dict or list (Example: {'name':'xxxx','id':'yyyy'})
+message = str
+```
+
+Optional inputs for .message():
+```
+json_placeholders = list (with json entries in this scheme: {'keyword':xxxx,'replace_with':yyyyy})
+save_log = boolean
+log_path = str (default: 'sent_messages_log.json')
+spam_prevention = boolean (default: True, prevents sending the same message multiple times to the same user or sending too many messages in a short time period to the same user)
+spam_prevention_wait_time_minutes = int (default: 1440)
+test = boolean (default: False, makes a screenshot of the message instead of sending the message)
+auto_close_selenium = boolean (default: True, closes the web browser when finished with sending a message)
+scraper = PyWebScraper class (default: None, needed if you want to send multiple messages in the same browser window)
+```
+
 ### API credentials required
 
 #### Meetup().upcoming_events()
@@ -137,29 +160,6 @@ redirect_uri = str
 Required inputs for .delete():
 ```
 event = Event class (with field 'url_meetup_event' and Event.save() function)
-```
-
-
-#### Meetup().message()
-
-Meetup().message() can send a message (including optional placeholders) to one or multiple other users.
-
-Required inputs for .message():
-```
-receiver_members = dict or list (Example: {'name':'xxxx','id':'yyyy'})
-message = str
-```
-
-Optional inputs for .message():
-```
-json_placeholders = list (with json entries in this scheme: {'keyword':xxxx,'replace_with':yyyyy})
-save_log = boolean
-log_path = str (default: 'sent_messages_log.json')
-spam_prevention = boolean (default: True, prevents sending the same message multiple times to the same user or sending too many messages in a short time period to the same user)
-spam_prevention_wait_time_minutes = int (default: 1440)
-test = boolean (default: False, makes a screenshot of the message instead of sending the message)
-auto_close_selenium = boolean (default: True, closes the web browser when finished with sending a message)
-scraper = PyWebScraper class (default: None, needed if you want to send multiple messages in the same browser window)
 ```
 
 
