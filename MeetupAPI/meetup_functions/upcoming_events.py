@@ -18,7 +18,18 @@ class MeetupUpcomingEvents():
                  text=None,
                  topic_category=None,
                  min_num_attendees=None,
-                 filter=None):
+                 filter=None,
+                 fields=[
+                     'event_hosts',
+                     'featured',
+                     'group_category',
+                     'group_key_photo',
+                     'group_photo',
+                     'group_topics',
+                     'how_to_find_us',
+                     'group_join_info',
+                     'group_membership_dues']
+                 ):
 
         # Find Upcoming Events
         # https://www.meetup.com/meetup_api/docs/find/upcoming_events/
@@ -43,7 +54,8 @@ class MeetupUpcomingEvents():
                 'access_token': access_token,
                 'sign': True,
                 'page': results_per_page,
-                'offset': self.offset
+                'offset': self.offset,
+                'fields': fields
             }
             if city:
                 gn = geocoders.GeoNames(username='meetupapi')
@@ -103,6 +115,41 @@ class MeetupUpcomingEvents():
                                     'https://meetup.com/'+event['group']['urlname'])
                         new_events = new_events_groups
 
+                    if 'event_organizer_ids_only' in filter:
+                        new_events_organizer_ids = []
+                        for event in new_events:
+                            if 'event_hosts' in event:
+                                if event['event_hosts'][0]['id'] not in self.value and event['event_hosts'][0]['id'] not in new_events_organizer_ids:
+                                    new_events_organizer_ids.append(
+                                        event['event_hosts'][0]['id'])
+
+                                    if len(self.value)+len(new_events_organizer_ids) == maximum_num_results:
+                                        break
+
+                        new_events = new_events_organizer_ids
+
+                    if 'group_organizer_ids_only' in filter:
+                        from MeetupAPI.meetup import Meetup
+
+                        new_events_organizer_ids = []
+                        for event in new_events:
+                            group_details = Meetup().group_details(
+                                event['group']['urlname'])
+                            if 'organizer' in group_details:
+                                if type(group_details['organizer']) == dict:
+                                    organizer = group_details['organizer']
+                                else:
+                                    organizer = group_details['organizer'][0]
+
+                                if organizer['id'] not in self.value and organizer['id'] not in new_events_organizer_ids:
+                                    new_events_organizer_ids.append(
+                                        organizer['id'])
+
+                                    if len(self.value)+len(new_events_organizer_ids) == maximum_num_results:
+                                        break
+
+                        new_events = new_events_organizer_ids
+
                 self.previous_count = len(self.value)
                 self.value += new_events
                 self.value = self.value[:maximum_num_results]
@@ -111,11 +158,11 @@ class MeetupUpcomingEvents():
                     self.num_of_unchanged_rounds += 1
 
                 self.log('Collected {} {}'.format(len(self.value),
-                                                  'groups' if 'group_urls_only' in filter else 'events'))
+                                                  'groups' if (filter and 'group_urls_only' in filter) else 'events'))
 
                 if len(self.value) == maximum_num_results:
                     self.log('Collected maximum number of {}'.format(
-                        'groups' if 'group_urls_only' in filter else 'events'))
+                        'groups' if (filter and 'group_urls_only' in filter) else 'events'))
                     break
 
                 # see if 10 pages in a row num of results doesn't change

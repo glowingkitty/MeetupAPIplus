@@ -66,8 +66,6 @@ class Meetup(MeetupFields):
         self.default_space_how_to_find_us = default_space_how_to_find_us
         self.default_space_timezonestring = default_space_timezonestring
 
-        self.setup_done = True if group or (access_token and access_token_valid_upto) or (
-            client_id and client_secret and redirect_uri) or (email and password) else False
         self.help = 'https://www.meetup.com/meetup_api/docs/'
         self.test = test
 
@@ -102,6 +100,10 @@ class Meetup(MeetupFields):
         if self.show_log == True:
             Log().print('{}'.format(text), os.path.basename(__file__), self.started)
 
+    def group_details(self, group_url):
+        from MeetupAPI.meetup_functions.group import MeetupGroup
+        return MeetupGroup(group_url).value
+
     def upcoming_events(self,
                         pages='all',
                         results_per_page=200,
@@ -112,7 +114,18 @@ class Meetup(MeetupFields):
                         text=None,
                         topic_category=None,
                         min_num_attendees=None,
-                        filter=None):
+                        filter=None,
+                        fields=[
+                            'event_hosts',
+                            'featured',
+                            'group_category',
+                            'group_key_photo',
+                            'group_photo',
+                            'group_topics',
+                            'how_to_find_us',
+                            'group_join_info',
+                            'group_membership_dues']
+                        ):
         from MeetupAPI.meetup_functions.upcoming_events import MeetupUpcomingEvents
         return MeetupUpcomingEvents(
             self.access_token,
@@ -125,7 +138,9 @@ class Meetup(MeetupFields):
             text,
             topic_category,
             min_num_attendees,
-            filter).value
+            filter,
+            fields
+        ).value
 
     def events(self,
                results_per_page=200,

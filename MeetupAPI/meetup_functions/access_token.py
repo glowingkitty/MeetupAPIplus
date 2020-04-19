@@ -21,7 +21,8 @@ class MeetupAcessToken():
         else:
             # check if required fields exist
             if not client_id or not client_secret or not redirect_uri:
-                self.log('-> ERROR: Meetup secrets incomplete!')
+                self.log(
+                    '-> ERROR: Meetup() input incomplete! client_id, client_secret and redirect_uri required')
                 self.value = None, None
 
             else:
