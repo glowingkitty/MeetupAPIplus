@@ -73,6 +73,8 @@ class MeetupMessage():
                     time.sleep(random.randint(2, 9))
                     textfield = self.scraper.selenium.find_element_by_id(
                         'messaging-new-convo')
+                    self.scraper.selenium.execute_script(
+                        "arguments[0].scrollIntoView();", textfield)
                     textfield.click()
                     textfield.send_keys(self.message)
                     time.sleep(random.randint(1, 6))

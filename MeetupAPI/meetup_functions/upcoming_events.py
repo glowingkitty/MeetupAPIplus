@@ -1,3 +1,4 @@
+import sys
 import time
 
 from geopy import geocoders
@@ -75,18 +76,24 @@ class MeetupUpcomingEvents():
             while pages >= self.offset and len(self.response_json) > 0:
                 parameter['offset'] = self.offset
 
-                self.response = requests.get('https://api.meetup.com/find/upcoming_events',
-                                             params=parameter).json()
+                self.response_json = requests.get('https://api.meetup.com/find/upcoming_events',
+                                                  params=parameter).json()
+
+                if 'errors' in self.response_json:
+                    self.log(
+                        '-> ERROR: {}'.format(self.response_json['errors']))
+                    sys.exit()
+
                 self.offset += 1
 
                 # check if events in response
-                if not 'events' in self.response:
+                if not 'events' in self.response_json:
                     self.log('events not found in response. Ending loop')
-                    self.log(self.response)
+                    self.log(self.response_json)
                     break
 
                 # filter events further
-                new_events = self.response['events']
+                new_events = self.response_json['events']
                 if filter:
                     if 'online_meetups' in filter:
                         new_events = [
@@ -148,6 +155,9 @@ class MeetupUpcomingEvents():
                                     if len(self.value)+len(new_events_organizer) == maximum_num_results:
                                         break
 
+                            # slow down to not reach API limit
+                            time.sleep(2)
+
                         new_events = new_events_organizer
 
                 self.previous_count = len(self.value)
@@ -163,8 +173,8 @@ class MeetupUpcomingEvents():
                     self.log('Collected maximum number of {}'.format('results'))
                     break
 
-                # see if 10 pages in a row num of results doesn't change
-                if self.num_of_unchanged_rounds == 10:
+                # see if 5 pages in a row num of results doesn't change
+                if self.num_of_unchanged_rounds == 5:
                     self.log(
                         'Number of results isnt changing anymore. Exiting loop.')
                     break

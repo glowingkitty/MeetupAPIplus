@@ -1,3 +1,4 @@
+import sys
 import time
 
 from MeetupAPI.log import Log
@@ -37,8 +38,9 @@ class MeetupEvents():
             self.offset += 1
 
             self.response_json = self.response.json()
-            if 'errors' in self.response_json and self.response_json['errors'][0]['code'] == 'group_error':
-                self.log('-> ERROR: Group name doesnt exist')
+            if 'errors' in self.response_json:
+                self.log('-> ERROR: {}'.format(self.response_json['errors']))
+                sys.exit()
             else:
                 self.value += [
                     {

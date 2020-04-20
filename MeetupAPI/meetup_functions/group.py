@@ -1,3 +1,4 @@
+import sys
 import time
 
 from MeetupAPI.log import Log
@@ -17,10 +18,9 @@ class MeetupGroup():
         self.response = requests.get('https://api.meetup.com/'+group_url)
 
         self.response_json = self.response.json()
-        if 'errors' in self.response_json and self.response_json['errors'][0]['code'] == 'group_error':
-            self.log('-> ERROR: Group name doesnt exist')
-            self.log(self.response_json)
-            self.value = None
+        if 'errors' in self.response_json:
+            self.log('-> ERROR: {}'.format(self.response_json['errors']))
+            sys.exit()
         else:
             self.value = self.response_json
 
