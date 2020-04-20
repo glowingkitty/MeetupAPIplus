@@ -123,7 +123,7 @@ class MeetupMessageGroupOrganizer():
             with open(self.cities_processed_path, 'r') as json_file:
                 self.cities_processed = json.load(json_file)
 
-                if city in cities_processed:
+                if city in self.cities_processed:
                     return True
 
         else:
