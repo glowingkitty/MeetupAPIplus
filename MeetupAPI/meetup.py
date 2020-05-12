@@ -161,8 +161,8 @@ class Meetup(MeetupFields):
         return MeetupMessage(receiver_members, message, json_placeholders, save_log, log_path, spam_prevention, spam_prevention_wait_time_minutes, test, auto_close_selenium, scraper).value
 
     def message_group_organizer(self,
-                                message=None,
-                                message_path='message_to_organizer.txt',
+                                messages=None,
+                                messages_paths='message_to_organizer.txt',
                                 cities=[
                                     'San Francisco, CA',
                                     'Los Angeles, CA',
@@ -198,8 +198,8 @@ class Meetup(MeetupFields):
             client_id=self.client_id,
             client_secret=self.client_secret,
             redirect_uri=self.redirect_uri,
-            message=message,
-            message_path=message_path,
+            messages=message,
+            messages_paths=messages_paths,
             cities=cities,
             cities_processed_path=cities_processed_path,
             maximum_num_results=maximum_num_results,

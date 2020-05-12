@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="MeetupAPI",  # Replace with your own username
-    version="1.4.3",
+    version="1.5.0",
     author="Marco",
     author_email=None,
     description="Use the combined power of the official Meetup API and a web scraper to implement Meetup into your project.",

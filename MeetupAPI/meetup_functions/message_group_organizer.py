@@ -12,8 +12,8 @@ class MeetupMessageGroupOrganizer():
                  client_id,
                  client_secret,
                  redirect_uri,
-                 message=None,
-                 message_path='message_to_organizer.txt',
+                 messages=None,
+                 messages_paths='message_to_organizer.txt',
                  cities=[
                      'San Francisco, CA',
                      'Los Angeles, CA',
@@ -49,6 +49,11 @@ class MeetupMessageGroupOrganizer():
         self.logs = ['self.__init__']
         self.started = round(time.time())
         self.cities_processed_path = cities_processed_path
+        self.message = None
+        self.message_path = None
+
+        self.messages = messages
+        self.messages_paths = messages_paths
 
         self.log('MeetupMessageGroupOrganizer()')
 
@@ -65,17 +70,10 @@ class MeetupMessageGroupOrganizer():
                 redirect_uri=redirect_uri
             )
 
-            # get message, from path or input
-            if not message and not os.path.isfile(message_path):
-                self.log(
-                    'ERROR: You havent defined a message. Use the "message" or the "message_path" input to define a message.')
-                self.value = False
+            # select message
+            self.select_message()
 
-            elif not message and os.path.isfile(message_path):
-                with open(message_path, 'r') as fh:
-                    message = fh.read()
-
-            if message:
+            if self.message:
                 for city in cities:
                     # check if city is already on the json file list of processed cities, if not, send messages
                     if self.city_processed(city):
@@ -96,7 +94,7 @@ class MeetupMessageGroupOrganizer():
                         for organizer in group_organizer:
                             success, scraper = self.meetup_class.message(
                                 receiver_members=organizer,
-                                message=message,
+                                message=self.message,
                                 json_placeholders=[{
                                     'keyword': 'organizer_name',
                                     'replace_with': organizer['name']
@@ -107,6 +105,9 @@ class MeetupMessageGroupOrganizer():
 
                             if success:
                                 time.sleep(random.randint(10, 20))
+
+                                # select message for next receiver
+                                self.select_message()
 
                             else:
                                 self.log(
@@ -130,6 +131,31 @@ class MeetupMessageGroupOrganizer():
             self.cities_processed = []
 
         return False
+
+    def select_message(self):
+        # if multiple messages or message paths, randomly choose one
+        if self.messages:
+            if type(self.messages) == list:
+                random_num = random.randint(0, len(self.messages)-1)
+                self.message = self.messages[random_num]
+            else:
+                self.message = self.messages
+        else:
+            if type(self.messages_paths) == list:
+                random_num = random.randint(0, len(self.messages_paths)-1)
+                self.message_path = self.messages_paths[random_num]
+            else:
+                self.message_path = self.messages_paths
+
+        # get message, from path or input
+        if not self.message and not os.path.isfile(self.message_path):
+            self.log(
+                'ERROR: You havent defined a message. Use the "message" or the "message_path" input to define a message.')
+            self.value = False
+
+        elif not self.message and os.path.isfile(self.message_path):
+            with open(self.message_path, 'r') as fh:
+                self.message = fh.read()
 
     def log(self, text):
         import os

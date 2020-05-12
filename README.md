@@ -169,8 +169,8 @@ Meetup().message_group_organizer() can message the group organizers from all gro
 
 Optional inputs for .message_group_organizer():
 ```
-message = str (default: None)
-message_path = str (default: 'message_to_organizer.txt', create a text file in that path to define a message which will be send)
+messages = str or list (default: None. If a list is given, a random message will be selected)
+messages_paths = str or list (default: 'message_to_organizer.txt', create a text file in that path to define a message which will be send. If a list is given, a random message will be selected)
 cities = list (default: [
                         'San Francisco, CA',
                         'Los Angeles, CA',
