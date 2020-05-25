@@ -3,7 +3,6 @@ import os
 import time
 
 import requests
-
 from MeetupAPI.log import Log
 from MeetupAPI.meetup_functions.meetup_fields import MeetupFields
 
@@ -198,7 +197,7 @@ class Meetup(MeetupFields):
             client_id=self.client_id,
             client_secret=self.client_secret,
             redirect_uri=self.redirect_uri,
-            messages=message,
+            messages=messages,
             messages_paths=messages_paths,
             cities=cities,
             cities_processed_path=cities_processed_path,
