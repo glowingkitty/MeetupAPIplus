@@ -5,13 +5,13 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="MeetupAPI",  # Replace with your own username
-    version="1.5.4",
+    version="1.5.5",
     author="Marco",
     author_email=None,
     description="Use the combined power of the official Meetup API and a web scraper to implement Meetup into your project.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/marcoEDU/Meetup-API",
+    url="https://github.com/glowingkitty/Meetup-API",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
