@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="MeetupAPI",  # Replace with your own username
-    version="1.5.5",
+    version="1.5.6",
     author="Marco",
     author_email=None,
     description="Use the combined power of the official Meetup API and a web scraper to implement Meetup into your project.",
@@ -22,6 +22,7 @@ setuptools.setup(
     install_requires=[
         'requests',
         'PyWebScraper',
-        'geopy'
+        'geopy',
+        'langdetect'
     ]
 )
