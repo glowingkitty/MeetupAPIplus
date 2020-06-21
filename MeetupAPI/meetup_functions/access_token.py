@@ -69,7 +69,8 @@ class MeetupAcessToken():
                     else:
                         secrets = {}
 
-                    secrets['MEETUP'] = {}
+                    if not 'MEETUP' in secrets:
+                        secrets['MEETUP'] = {}
                     secrets['MEETUP']['ACCESS_TOKEN'] = access_token
                     secrets['MEETUP']['ACCESS_TOKEN_VALID_UPTO'] = access_token_valid_upto
 
