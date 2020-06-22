@@ -3,6 +3,7 @@ import os
 import time
 
 import requests
+
 from MeetupAPI.log import Log
 from MeetupAPI.meetup_functions.meetup_fields import MeetupFields
 
@@ -97,6 +98,7 @@ class Meetup(MeetupFields):
                         text=None,
                         topic_category=None,
                         min_num_attendees=None,
+                        max_num_of_unchanged_rounds=10,
                         filter=None,
                         fields=[
                             'event_hosts',
@@ -121,6 +123,7 @@ class Meetup(MeetupFields):
             text,
             topic_category,
             min_num_attendees,
+            max_num_of_unchanged_rounds,
             filter,
             fields
         ).value

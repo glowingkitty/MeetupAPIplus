@@ -3,7 +3,6 @@ import time
 
 from geopy import geocoders
 from langdetect import detect
-
 from MeetupAPI.log import Log
 
 
@@ -19,6 +18,7 @@ class MeetupUpcomingEvents():
                  text=None,
                  topic_category=None,
                  min_num_attendees=None,
+                 max_num_of_unchanged_rounds=10,
                  filter=None,
                  fields=[
                      'event_hosts',
@@ -174,7 +174,7 @@ class MeetupUpcomingEvents():
                     break
 
                 # see if 5 pages in a row num of results doesn't change
-                if self.num_of_unchanged_rounds == 5:
+                if self.num_of_unchanged_rounds == max_num_of_unchanged_rounds:
                     self.log(
                         'Number of results isnt changing anymore. Exiting loop.')
                     break
